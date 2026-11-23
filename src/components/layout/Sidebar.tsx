@@ -1,14 +1,12 @@
 import { NavLink } from "react-router-dom";
-import {
-  Grid2x2,
-  AlertTriangle,
-  Link2,
-  ShieldCheck,
-  ScrollText,
-  Sun,
-  Moon,
-} from "lucide-react";
-import { useStore } from "../../store/useStore";
+import { Grid2x2, AlertTriangle, Link2, ShieldCheck, ScrollText, Briefcase } from "lucide-react";
+import { useStore, type Theme, type Role } from "../../store/useStore";
+
+const THEMES: { key: Theme; label: string }[] = [
+  { key: "glass-dark",  label: "Dark"   },
+  { key: "glass-light", label: "Light"  },
+  { key: "nature",      label: "Nature" },
+];
 
 function NavIcon({ name }: { name: string }) {
   const p = { size: 16, strokeWidth: 1.7 };
@@ -17,29 +15,32 @@ function NavIcon({ name }: { name: string }) {
     case "findings":    return <AlertTriangle {...p} />;
     case "evidence":    return <Link2 {...p} />;
     case "controls":    return <ShieldCheck {...p} />;
+    case "simulator":   return <Briefcase {...p} />;
     default:            return <ScrollText {...p} />;
   }
 }
 
 export function Sidebar() {
-  const summary     = useStore((s) => s.summary);
-  const live        = useStore((s) => s.live);
-  const theme       = useStore((s) => s.theme);
-  const toggleTheme = useStore((s) => s.toggleTheme);
-
-  const openFindings = useStore((s) => s.findings.filter((f) => f.status === "OPEN").length);
+  const summary      = useStore((s) => s.summary);
+  const live         = useStore((s) => s.live);
+  const theme        = useStore((s) => s.theme);
+  const role         = useStore((s) => s.role);
+  const setTheme     = useStore((s) => s.setTheme);
+  const setRole      = useStore((s) => s.setRole);
+  const openCount    = useStore((s) => s.findings.filter((f) => f.status === "OPEN").length);
   const reports      = summary?.reports ?? 0;
   const p            = summary?.posture;
-  const good         = p ? p.score_pct >= 80 : null;
-  const ok           = p ? p.score_pct >= 60 : null;
-  const scoreColor   = good ? "var(--ok)" : ok ? "var(--high)" : "var(--crit)";
+  const scoreColor   = p
+    ? p.score_pct >= 80 ? "var(--ok)" : p.score_pct >= 60 ? "var(--high)" : "var(--crit)"
+    : "var(--faint)";
 
   const links: [string, string, string | number | undefined][] = [
     ["overview",    "Overview",         undefined],
-    ["findings",    "Findings",         openFindings || undefined],
-    ["evidence",    "Evidence chain",   reports || undefined],
+    ["findings",    "Findings",         openCount || undefined],
+    ["evidence",    "Evidence chain",   reports   || undefined],
     ["controls",    "Controls",         7],
     ["compliance",  "Compliance",       undefined],
+    ["simulator",   "What-if",          undefined],
   ];
 
   return (
@@ -48,7 +49,7 @@ export function Sidebar() {
       <div className="brand">
         <span className="logo">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3 20 6v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6z" fill="#8b7bff" />
+            <path d="M12 3 20 6v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6z" fill="var(--accent)" />
             <path d="m8.5 12 2.5 2.5 4.5-5" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
@@ -58,32 +59,21 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Account pill */}
+      {/* Account */}
       <div className="acct">
         <b title={summary?.account_id}>{summary ? summary.account_id : "—"}</b>
         <span>{summary ? `${summary.region} · ${live ? "live" : "sample"}` : "not connected"}</span>
       </div>
 
-      {/* Posture mini-score */}
+      {/* Live posture score */}
       {p && (
-        <div style={{
-          padding: "12px 14px",
-          borderRadius: 14,
-          border: "1px solid var(--line)",
-          background: "var(--glass)",
-        }}>
-          <div style={{ fontSize: 11, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
-            Current posture
+        <div className="side-score">
+          <div className="label">Current posture</div>
+          <div className="score-num" style={{ color: scoreColor }}>
+            {p.score_pct}<span style={{ fontSize: 16, color: "var(--faint)" }}>%</span>
           </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 34, lineHeight: 1, color: scoreColor }}>
-              {p.score_pct}
-            </span>
-            <span style={{ fontSize: 14, color: "var(--faint)" }}>%</span>
-          </div>
-          {/* Mini bar */}
-          <div style={{ height: 4, borderRadius: 99, background: "var(--glass-2)", marginTop: 8, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${p.score_pct}%`, background: scoreColor, borderRadius: 99, transition: "width 1s ease" }} />
+          <div className="score-bar">
+            <i style={{ width: `${p.score_pct}%`, background: scoreColor }} />
           </div>
         </div>
       )}
@@ -109,30 +99,41 @@ export function Sidebar() {
       {/* Footer */}
       <div className="side-foot">
         <span className={`live ${live ? "on" : ""}`}>
-          <i />
-          <span>{live ? "Live" : "Sample data"}</span>
+          <i /><span>{live ? "Live" : "Sample data"}</span>
         </span>
 
-        <button className="btn sm" onClick={toggleTheme} aria-label="Toggle theme">
-          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-          {theme === "dark" ? "Light" : "Dark"} theme
-        </button>
+        {/* Role toggle */}
+        <div className="theme-switcher">
+          {(["ciso", "auditor"] as Role[]).map((r) => (
+            <button
+              key={r}
+              className={`theme-btn ${role === r ? "active" : ""}`}
+              onClick={() => setRole(r)}
+              aria-label={`${r} view`}
+            >
+              {r === "ciso" ? "🏦 CISO" : "🔍 Auditor"}
+            </button>
+          ))}
+        </div>
+
+        {/* Theme switcher */}
+        <div className="theme-switcher">
+          {THEMES.map((t) => (
+            <button
+              key={t.key}
+              className={`theme-btn ${theme === t.key ? "active" : ""}`}
+              onClick={() => setTheme(t.key)}
+              aria-label={`${t.label} theme`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
         {/* Compliance stamp */}
-        <div style={{
-          marginTop: 4,
-          padding: "10px 12px",
-          borderRadius: 12,
-          border: "1px solid rgb(124 110 245 / 0.2)",
-          background: "rgb(124 110 245 / 0.06)",
-          fontSize: 11,
-          color: "var(--faint)",
-          lineHeight: 1.5,
-        }}>
-          <div style={{ color: "var(--accent-2)", fontWeight: 600, marginBottom: 2, fontSize: 11 }}>
-            Joint Standard 2 of 2024
-          </div>
-          Cybersecurity &amp; cyber resilience — Prudential Authority &amp; FSCA, in force 1 June 2025
+        <div className="compliance-stamp">
+          <b>Joint Standard 2 of 2024</b>
+          Cybersecurity &amp; cyber resilience — PA &amp; FSCA · in force 1 June 2025
         </div>
       </div>
     </aside>

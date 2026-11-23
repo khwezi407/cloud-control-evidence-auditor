@@ -8,6 +8,7 @@ import { FindingsView } from "./components/views/FindingsView";
 import { EvidenceView } from "./components/views/EvidenceView";
 import { ControlsView } from "./components/views/ControlsView";
 import { ComplianceView } from "./components/views/ComplianceView";
+import { SimulatorView } from "./components/views/SimulatorView";
 import { CommandPalette } from "./components/common/CommandPalette";
 import { Toast } from "./components/common/Toast";
 import { FindingDrawer } from "./components/findings/FindingDrawer";
@@ -91,6 +92,7 @@ function AppShell() {
           <Route path="/evidence" element={<EvidenceView />} />
           <Route path="/controls" element={<ControlsView />} />
           <Route path="/compliance" element={<ComplianceView />} />
+          <Route path="/simulator" element={<SimulatorView />} />
         </Routes>
         <footer>
           <span id="note">

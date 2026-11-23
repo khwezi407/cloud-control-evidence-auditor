@@ -28,6 +28,11 @@ const PAGES: Record<string, { title: string; em: string; desc: string }> = {
     em: "mapping",
     desc: "How the seven controls evidence the themes of Joint Standard 2 of 2024 — with a downloadable evidence report.",
   },
+  simulator: {
+    title: "What-if",
+    em: "simulator",
+    desc: "Tick the controls you plan to fix and see your projected posture score instantly. Use this to prioritise remediation.",
+  },
 };
 
 function routeName(path: string): string {

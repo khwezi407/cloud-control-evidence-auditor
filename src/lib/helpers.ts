@@ -42,6 +42,7 @@ const SA_DATETIME_YEAR = new Intl.DateTimeFormat("en-ZA", {
 
 export const day = (t?: string) => (t ? SA_DATE.format(new Date(t)) : "");
 export const when = (t?: string) => (t ? SA_DATETIME.format(new Date(t)) : "");
+export const hhmm = when; // alias used in new components
 export const whenFull = (t?: string) => (t ? SA_DATETIME_YEAR.format(new Date(t)) : "");
 
 export const short = (h?: string) => (h ? `${h.slice(0, 8)}…${h.slice(-6)}` : "");

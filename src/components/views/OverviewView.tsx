@@ -7,7 +7,9 @@ import { Card } from "../common/Card";
 import { PostureConstellation } from "../overview/PostureConstellation";
 import { TrendChart } from "../overview/TrendChart";
 import { EvidenceChain } from "../overview/EvidenceChain";
+import { ScanTimeline } from "../overview/ScanTimeline";
 import { FindingsTable } from "../findings/FindingsTable";
+import { CisoView } from "./CisoView";
 import { briefHtml, briefText } from "../../lib/brief";
 import { complianceReportHtml, findingsToCsv } from "../../lib/export";
 import { downloadHtml, downloadText, mttr, titleCase } from "../../lib/helpers";
@@ -33,10 +35,14 @@ export function OverviewView() {
   const reports   = useStore((s) => s.reports);
   const verify    = useStore((s) => s.verify);
   const live      = useStore((s) => s.live);
+  const role      = useStore((s) => s.role);
   const setLastAction = useStore((s) => s.setLastAction);
   const openFinding   = useUi((s) => s.openFinding);
 
   if (!summary) return null;
+
+  // CISO mode shows the executive view instead
+  if (role === "ciso") return <CisoView />;
 
   const open     = findings.filter((f) => f.status === "OPEN");
   const waived   = findings.filter((f) => f.status === "SUPPRESSED");
@@ -265,6 +271,9 @@ export function OverviewView() {
           ))}
         </div>
       </div>
+
+      {/* ── Scan timeline ── */}
+      <ScanTimeline reports={reports} />
 
       {/* ── Needs attention table ── */}
       <Card className="tablecard" animateDelay={0.44}>
