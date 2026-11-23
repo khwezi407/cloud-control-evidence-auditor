@@ -143,25 +143,6 @@ evidence-auditor-console/
 
 ---
 
-## What to say in an interview
 
-> "I designed it so the component that reads everything can't change anything,
-> and the component that changes things can only change one setting on tagged
-> buckets."
-
-> "Each daily report stores the SHA-256 hash of the one before it, so an
-> auditor can trust the history. The console verifies the chain in the browser
-> with the Web Crypto API."
-
-> "The console maps the seven controls to the themes of South Africa's Joint
-> Standard 2 of 2024 and exports a printable evidence report — because a big
-> part of complying is proving that you comply."
-
-## Tech stack
-
-React 18 · TypeScript · Vite · React Router · Zustand · Framer Motion ·
-lucide-react · Web Crypto API
-
----
 
 Reference implementation · AWS Lambda, DynamoDB, S3, Cognito · MIT
